@@ -1,0 +1,4 @@
+# EdgeOne Pages 配置
+type: static
+output_dir: pages
+index_file: index.html

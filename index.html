@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdgeOne Pages 图床</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .upload-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .upload-subtext {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .uploading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-section {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .result-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            margin: 0 auto 20px;
+            display: block;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .url-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .url-item {
+            margin-bottom: 15px;
+        }
+        
+        .url-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .url-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .url-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .url-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: white;
+            transition: border-color 0.3s;
+        }
+        
+        .url-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .copy-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .copy-btn:hover {
+            background: #764ba2;
+        }
+        
+        .copy-btn.copied {
+            background: #28a745;
+        }
+        
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: #333;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: #28a745;
+        }
+        
+        .toast.error {
+            background: #dc3545;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖼️ EdgeOne Pages 图床</h1>
+            <p>基于 EdgeOne Pages 和 KV 存储的开源图床服务</p>
+        </div>
+        
+        <div style="background: white; border-radius: 10px; padding: 15px 30px; margin-bottom: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center;">
+            <a href="/admin" style="color: #667eea; text-decoration: none; font-weight: 600; font-size: 1.1rem;">🛠️ 进入后台管理</a>
+        </div>
+        
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📸</div>
+                <div class="upload-text">点击或拖拽上传图片</div>
+                <div class="upload-subtext">支持 JPG、PNG、GIF、WebP 格式，单张不超过 25MB</div>
+                <input type="file" class="file-input" id="fileInput" accept="image/*" multiple>
+            </div>
+            
+            <div class="uploading" id="uploading">
+                <div class="spinner"></div>
+                <div>正在上传图片...</div>
+            </div>
+        </div>
+        
+        <div class="result-section" id="resultSection">
+            <h2 class="result-title">✅ 上传成功！</h2>
+            <img class="preview-image" id="previewImage" src="" alt="预览图片">
+            <div class="url-list">
+                <div class="url-item">
+                    <div class="url-label">Markdown 格式</div>
+                    <div class="url-input-group">
+                        <input type="text" class="url-input" id="markdownUrl" readonly>
+                        <button class="copy-btn" data-target="markdownUrl">复制</button>
+                    </div>
+                </div>
+                <div class="url-item">
+                    <div class="url-label">HTML 格式</div>
+                    <div class="url-input-group">
+                        <input type="text" class="url-input" id="htmlUrl" readonly>
+                        <button class="copy-btn" data-target="htmlUrl">复制</button>
+                    </div>
+                </div>
+                <div class="url-item">
+                    <div class="url-label">直接链接</div>
+                    <div class="url-input-group">
+                        <input type="text" class="url-input" id="directUrl" readonly>
+                        <button class="copy-btn" data-target="directUrl">复制</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // DOM 元素
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploading = document.getElementById('uploading');
+        const resultSection = document.getElementById('resultSection');
+        const toast = document.getElementById('toast');
+        
+        // 上传区域点击事件（仅在点击空白区域时触发）
+        uploadArea.addEventListener('click', (e) => {
+            // 如果点击的是 fileInput 本身，不触发
+            if (e.target === fileInput) {
+                return;
+            }
+            
+            // 如果点击的是 uploadArea 的子元素（除了 fileInput）
+            if (e.target !== uploadArea && !e.target.classList.contains('file-input')) {
+                fileInput.click();
+            }
+        });
+        
+        // 文件选择事件（只处理真实的用户选择）
+        let isUploading = false; // 添加上传状态锁
+        fileInput.addEventListener('change', (e) => {
+            // 如果正在上传或清空操作，不处理
+            if (isUploading || !fileInput.value) {
+                return;
+            }
+            
+            const files = e.target.files;
+            if (files.length > 0) {
+                uploadImage(files[0]);
+            }
+        });
+        
+        // 拖拽事件
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                uploadImage(files[0]);
+            }
+        });
+        
+        // 上传图片
+        async function uploadImage(file) {
+            // 防止重复上传
+            if (isUploading || uploading.style.display === 'block') {
+                return;
+            }
+            
+            isUploading = true; // 设置上传锁
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            // 显示上传中状态
+            uploadArea.style.display = 'none';
+            uploading.style.display = 'block';
+            resultSection.style.display = 'none';
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult(result);
+                    showToast('图片上传成功！', 'success');
+                } else {
+                    showToast(result.error || '上传失败', 'error');
+                }
+            } catch (error) {
+                console.error('上传错误:', error);
+                showToast('上传失败: ' + error.message, 'error');
+            } finally {
+                uploadArea.style.display = 'block';
+                uploading.style.display = 'none';
+                // 延迟清空，避免触发 change 事件
+                setTimeout(() => {
+                    fileInput.value = '';
+                    isUploading = false; // 释放上传锁
+                }, 100);
+            }
+        }
+        
+        // 显示上传结果
+        function showResult(data) {
+            const imageUrl = window.location.origin + data.url;
+            
+            document.getElementById('previewImage').src = imageUrl;
+            document.getElementById('directUrl').value = imageUrl;
+            document.getElementById('markdownUrl').value = `![${data.originalName}](${imageUrl})`;
+            document.getElementById('htmlUrl').value = `<img src="${imageUrl}" alt="${data.originalName}">`;
+            
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // 复制功能
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('copy-btn')) {
+                const targetId = e.target.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                
+                input.select();
+                document.execCommand('copy');
+                
+                const originalText = e.target.textContent;
+                e.target.textContent = '已复制';
+                e.target.classList.add('copied');
+                
+                setTimeout(() => {
+                    e.target.textContent = originalText;
+                    e.target.classList.remove('copied');
+                }, 2000);
+                
+                showToast('链接已复制到剪贴板', 'success');
+            }
+        });
+        
+        
+        // 显示提示
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        
+    </script>
+</body>
+</html>

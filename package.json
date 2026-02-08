@@ -1,0 +1,11 @@
+{
+  "name": "edgeone-pages-image-hosting",
+  "version": "1.0.0",
+  "description": "基于 EdgeOne Pages 和 KV 存储的图床应用",
+  "scripts": {
+    "deploy": "edgeone pages deploy . --project-name=image-hosting --binding IMAGES=images --output-dir=pages"
+  },
+  "keywords": ["image-hosting", "edgeone-pages", "kv-storage"],
+  "author": "",
+  "license": "MIT"
+}

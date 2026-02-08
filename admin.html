@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图床后台管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .nav {
+            background: white;
+            border-radius: 10px;
+            padding: 15px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: 600;
+        }
+        
+        .nav-links a:hover {
+            color: #764ba2;
+        }
+        
+        .refresh-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background: #764ba2;
+        }
+        
+        .gallery-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .gallery-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats {
+            font-size: 1rem;
+            color: #666;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .image-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            background: white;
+        }
+        
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .image-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        
+        .image-info {
+            padding: 15px;
+        }
+        
+        .image-name {
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .image-filename {
+            font-size: 0.75rem;
+            color: #999;
+            margin-bottom: 8px;
+            font-family: monospace;
+        }
+        
+        .image-meta {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 12px;
+        }
+        
+        .image-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+        
+        .copy-btn {
+            background: #667eea;
+            color: white;
+        }
+        
+        .copy-btn:hover {
+            background: #764ba2;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: #333;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: #28a745;
+        }
+        
+        .toast.error {
+            background: #dc3545;
+        }
+        
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .lightbox.show {
+            display: flex;
+        }
+        
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+            
+            .nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ 图床后台管理</h1>
+            <p>管理已上传的图片</p>
+        </div>
+        
+        <div class="nav">
+            <div class="nav-links">
+                <a href="/">🏠 返回上传</a>
+                <a href="/admin" style="color: #764ba2;">📊 后台管理</a>
+            </div>
+            <button class="refresh-btn" id="refreshBtn">🔄 刷新列表</button>
+        </div>
+        
+        <div class="gallery-section">
+            <div class="gallery-title">
+                <span>📚 图片库</span>
+                <span class="stats" id="stats">加载中...</span>
+            </div>
+            <div class="image-grid" id="imageGrid">
+                <div class="empty-state">
+                    <div class="empty-icon">🗂️</div>
+                    <div>暂无图片</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close">&times;</span>
+        <img src="" alt="大图预览" id="lightboxImg">
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // 密码输入和存储（前端不存储密码常量，只存储用户输入的密码）
+        let currentPassword = sessionStorage.getItem('admin_password');
+        
+        if (!currentPassword) {
+            const input = prompt('请输入后台管理密码：');
+            if (!input) {
+                alert('请输入密码！');
+                window.location.href = '/';
+                throw new Error('未授权访问');
+            }
+            // 不验证密码是否正确，直接存储，由后端API验证
+            currentPassword = input;
+            sessionStorage.setItem('admin_password', currentPassword);
+        }
+        
+        // DOM 元素
+        const imageGrid = document.getElementById('imageGrid');
+        const stats = document.getElementById('stats');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const toast = document.getElementById('toast');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        
+        // 加载图片列表（带密码验证）
+        async function loadImages() {
+            try {
+                stats.textContent = '加载中...';
+                const response = await fetch(`/admin-list?password=${encodeURIComponent(currentPassword)}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    stats.textContent = `共 ${result.count} 张图片`;
+                    if (result.images.length > 0) {
+                        displayImages(result.images);
+                    } else {
+                        showEmptyState();
+                    }
+                } else {
+                    showToast('加载失败: ' + (result.error || '未知错误'), 'error');
+                    if (response.status === 401) {
+                        // 密码错误，清除 session 并要求重新输入
+                        sessionStorage.removeItem('admin_password');
+                        const newPassword = prompt('密码错误，请重新输入：');
+                        if (newPassword) {
+                            currentPassword = newPassword;
+                            sessionStorage.setItem('admin_password', currentPassword);
+                            loadImages(); // 重新加载
+                        } else {
+                            window.location.href = '/';
+                        }
+                    }
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('加载图片错误:', error);
+                showToast('加载失败: ' + error.message, 'error');
+                showEmptyState();
+            }
+        }
+        
+        // 显示图片
+        function displayImages(images) {
+            imageGrid.innerHTML = images.map(image => {
+                const fullUrl = window.location.origin + image.url;
+                const uploadDate = image.uploadTime 
+                    ? new Date(image.uploadTime).toLocaleString('zh-CN')
+                    : '未知时间';
+                
+                return `
+                <div class="image-card">
+                    <img src="${image.url}" alt="${image.filename}" 
+                             loading="lazy" onclick="openLightbox('${image.url}')">
+                        <div class="image-info">
+                            <div class="image-name" title="${image.metadata.name || ''}">
+                                ${image.metadata.name || '未命名'}
+                            </div>
+                            <div class="image-filename">${image.filename}</div>
+                            <div class="image-meta">
+                                ${formatFileSize(image.metadata.size || 0)} · ${uploadDate}
+                            </div>
+                            <div class="image-actions">
+                                <button class="action-btn copy-btn" onclick="copyImageUrl('${image.url}')">
+                                    复制链接
+                                </button>
+                                <button class="action-btn delete-btn" onclick="deleteImage('${image.filename}')">
+                                    删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 显示空状态
+        function showEmptyState() {
+            stats.textContent = '共 0 张图片';
+            imageGrid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🗂️</div>
+                    <div>暂无图片</div>
+                </div>
+            `;
+        }
+        
+        // 打开大图预览
+        window.openLightbox = function(url) {
+            lightboxImg.src = url;
+            lightbox.classList.add('show');
+        };
+        
+        // 关闭大图预览
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox || e.target.classList.contains('lightbox-close')) {
+                lightbox.classList.remove('show');
+            }
+        });
+        
+        // 复制图片链接
+        window.copyImageUrl = function(url) {
+            const fullUrl = window.location.origin + url;
+            navigator.clipboard.writeText(fullUrl).then(() => {
+                showToast('链接已复制到剪贴板', 'success');
+            }).catch(() => {
+                // 降级方案
+                const input = document.createElement('input');
+                input.value = fullUrl;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showToast('链接已复制到剪贴板', 'success');
+            });
+        };
+        
+        // 删除图片（带密码验证）
+        window.deleteImage = async function(filename) {
+            if (!confirm(`确定要删除图片 "${filename}" 吗？\n此操作不可恢复！`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/admin-delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename, password: currentPassword })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('图片已删除', 'success');
+                    loadImages(); // 刷新列表
+                } else {
+                    showToast(result.error || '删除失败', 'error');
+                    if (response.status === 401) {
+                        // 密码错误，提示重新输入
+                        sessionStorage.removeItem('admin_password');
+                        const newPassword = prompt('密码错误，请重新输入：');
+                        if (newPassword) {
+                            currentPassword = newPassword;
+                            sessionStorage.setItem('admin_password', currentPassword);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('删除错误:', error);
+                showToast('删除失败: ' + error.message, 'error');
+            }
+        };
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+        
+        // 显示提示
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 刷新按钮
+        refreshBtn.addEventListener('click', () => {
+            loadImages();
+            showToast('列表已刷新', 'success');
+        });
+        
+        // 页面加载时获取图片列表
+        loadImages();
+    </script>
+</body>
+</html>
